@@ -1,9 +1,11 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, ConversationHandler, MessageHandler, filters
 import requests
 
 API_KEY = "9190a75114cb17ceeda7a455a62735b3"
 BOT_TOKEN = "7439581797:AAG67kDTjuy9ibmuTFcMWRR3jNlNP4PXLsE"
+
+NUMBER = range(1)
 
 def get_number_info(number: str):
     url = f"http://apilayer.net/api/validate?access_key={API_KEY}&number={number}"
@@ -23,18 +25,28 @@ def get_number_info(number: str):
     else:
         return f"Invalid phone number: {number}"
 
+async def start_numinfo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Please provide a phone number.")
+    return NUMBER
+
 async def handle_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    number = context.args[0] if context.args else None
-    if number:
-        info = get_number_info(number)
-        await update.message.reply_text(info)
-    else:
-        await update.message.reply_text("Please provide a phone number after the /numinfo command.")
+    number = update.message.text
+    info = get_number_info(number)
+    await update.message.reply_text(info)
+    return ConversationHandler.END
 
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
 
-    application.add_handler(CommandHandler("numinfo", handle_number))
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("numinfo", start_numinfo)],
+        states={
+            NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_number)],
+        },
+        fallbacks=[],
+    )
+
+    application.add_handler(conv_handler)
 
     application.run_polling()
 
