@@ -11,7 +11,15 @@ def get_number_info(number: str):
     data = response.json()
 
     if 'valid' in data and data['valid']:
-        return f"Number {number} is valid. Country: {data['country_name']}, Location: {data['location']}, Carrier: {data['carrier']}"
+        return (
+            f"Valid\n"
+            f"Local Format: {data.get('local_format', 'N/A')}\n"
+            f"Intl. Format: {data.get('international_format', 'N/A')}\n"
+            f"Country: {data.get('country_name', 'N/A')}\n"
+            f"Location: {data.get('location', 'N/A')}\n"
+            f"Carrier: {data.get('carrier', 'N/A')}\n"
+            f"Line Type: {data.get('line_type', 'N/A')}"
+        )
     else:
         return f"Invalid phone number: {number}"
 
